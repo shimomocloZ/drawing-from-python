@@ -2,6 +2,7 @@ import dataclasses
 
 from src.models.wishlist import Wishlist
 
+
 @dataclasses.dataclass
 class Buyer:
     id: int = 0
