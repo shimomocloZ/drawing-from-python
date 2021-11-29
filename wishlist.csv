@@ -1,0 +1,8 @@
+id,priority,number_of_buy
+1,A;B;C,1;2;1
+2,D;E;F;G;H,2;1;2;1;2
+3,D;E;F;G;H,1;2;1;2;1
+4,I,2
+5,J,2
+6,J,3
+7,K,3
