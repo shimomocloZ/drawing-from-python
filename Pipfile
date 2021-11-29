@@ -6,6 +6,9 @@ name = "pypi"
 [scripts]
 lint = "flake8 src"
 format = "autopep8 -r -i src"
+"db:seed" = "python seed.py"
+"db:migrate" = "alembic upgrade head"
+"db:migrate:reset" = "sh -c 'rm -rf migrations/db.sqlite && alembic upgrade head'"
 
 [packages]
 sqlalchemy = "1.4.27"

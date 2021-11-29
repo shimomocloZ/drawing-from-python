@@ -1,0 +1,23 @@
+- model: migrations.models.wishlist.Wishlists
+  id: 1
+  fields:
+    priority: A;B;C
+    number_of_buy: 1;2;1
+
+- model: migrations.models.wishlist.Wishlists
+  id: 2
+  fields:
+    priority: D;E;F;G;H
+    number_of_buy: 2;1;2;1;2
+
+- model: migrations.models.wishlist.Wishlists
+  id: 3
+  fields:
+    priority: D;E;F;G;H
+    number_of_buy: 1;2;1;2;1
+
+- model: migrations.models.wishlist.Wishlists
+  id: 4
+  fields:
+    priority: I
+    number_of_buy: "2"

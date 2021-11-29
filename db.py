@@ -27,19 +27,19 @@ def main():
         print(product.id, product.name)
 
     # wishlist
-    wishlist = Wishlists()
-    wishlist.priority = 'A;B'
-    wishlist.number_of_buy = '1;1'
-    Session.add(wishlist)
+    # wishlist = Wishlists()
+    # wishlist.priority = 'A;B'
+    # wishlist.number_of_buy = '1;1'
+    # Session.add(wishlist)
 
     wishlists = Wishlists.query.all()
     for res in wishlists:
         print(res.id, res.priority, res.number_of_buy)
 
-    buyer = Buyers()
-    buyer.name = '伊藤'
-    buyer.wishlist_id = wishlists[0].id
-    Session.add(buyer)
+    # buyer = Buyers()
+    # buyer.name = '伊藤'
+    # buyer.wishlist_id = wishlists[0].id
+    # Session.add(buyer)
 
     buyers = Buyers.query.all()
     for res in buyers:

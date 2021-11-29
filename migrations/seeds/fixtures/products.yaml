@@ -1,0 +1,14 @@
+- model: migrations.models.product.Products
+  id: 1
+  fields:
+    name: A
+
+- model: migrations.models.product.Products
+  id: 2
+  fields:
+    name: B
+
+- model: migrations.models.product.Products
+  id: 3
+  fields:
+    name: C
