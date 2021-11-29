@@ -15,5 +15,13 @@
         "editor.codeActionsOnSave": {
             "source.organizeImports": true
         }
-    }
+    },
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "drawing",
+            "database": "${workspaceFolder:drawing-from-python}/migrations/db.sqlite"
+        }
+    ]
 }
