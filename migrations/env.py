@@ -3,9 +3,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from migrations.models.buyer import Buyers  # noqa E401
-from migrations.models.product import Products  # noqa E401
-from migrations.models.wishlist import Wishlists  # noqa E401
+from migrations.models import *  # noqa F403
 from migrations.setting import Base
 
 # this is the Alembic Config object, which provides

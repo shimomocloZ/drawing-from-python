@@ -4,13 +4,13 @@ import os
 from sqlalchemy_seed import (create_table, drop_table,  # noqa E401
                              load_fixture_files, load_fixtures)
 
-from migrations.setting import Session  # noqa E401
+from migrations.setting import Session
 
 
 def main():
     path = os.path.join('migrations', 'seeds', 'fixtures')
     fixtures = load_fixture_files(
-        path, ['products.yaml', 'wishlists.yaml', 'buyers.yaml'])
+        path, ['products.yaml', 'wishlists.yaml', 'buyers.yaml', 'reserved_products.yaml'])
     load_fixtures(Session, fixtures)
 
 

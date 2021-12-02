@@ -1,6 +1,7 @@
 
 from migrations.models.buyer import Buyers
 from migrations.models.product import Products
+from migrations.models.reserved_product import ReservedProducts
 from migrations.models.wishlist import Wishlists
 from migrations.setting import Session
 
@@ -44,6 +45,10 @@ def main():
     buyers = Buyers.query.all()
     for res in buyers:
         print(res.id, res.name, res.wishlist_id)
+
+    reserved_products = ReservedProducts.query.all()
+    for res in reserved_products:
+        print(res.id, res.product_name, res.buyer_name)
 
 
 if __name__ == '__main__':
