@@ -1,0 +1,40 @@
+- model: migrations.models.product.Products
+  id: 1
+  fields:
+    name: A
+- model: migrations.models.product.Products
+  id: 2
+  fields:
+    name: B
+- model: migrations.models.product.Products
+  id: 3
+  fields:
+    name: C
+- model: migrations.models.product.Products
+  id: 4
+  fields:
+    name: D
+- model: migrations.models.product.Products
+  id: 5
+  fields:
+    name: E
+- model: migrations.models.product.Products
+  id: 6
+  fields:
+    name: F
+- model: migrations.models.product.Products
+  id: 7
+  fields:
+    name: G
+- model: migrations.models.product.Products
+  id: 8
+  fields:
+    name: H
+- model: migrations.models.product.Products
+  id: 9
+  fields:
+    name: I
+- model: migrations.models.product.Products
+  id: 10
+  fields:
+    name: J

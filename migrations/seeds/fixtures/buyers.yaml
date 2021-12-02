@@ -1,0 +1,29 @@
+- model: migrations.models.buyer.Buyers
+  id: 1
+  fields:
+    name: 伊藤
+    wishlist_id: 1
+
+- model: migrations.models.buyer.Buyers
+  id: 2
+  fields:
+    name: 鈴木
+    wishlist_id: 1
+
+- model: migrations.models.buyer.Buyers
+  id: 3
+  fields:
+    name: 佐藤
+    wishlist_id: 2
+
+- model: migrations.models.buyer.Buyers
+  id: 4
+  fields:
+    name: 田中
+    wishlist_id: 3
+
+- model: migrations.models.buyer.Buyers
+  id: 5
+  fields:
+    name: 山田
+    wishlist_id: 4

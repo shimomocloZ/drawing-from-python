@@ -1,0 +1,25 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[scripts]
+lint = "flake8 src"
+format = "autopep8 -r -i src"
+start = "python main.py"
+"db:seed" = "python seed.py"
+"db:migrate" = "alembic upgrade head"
+"db:migrate:generate" = "alembic revision --autogenerate -m "
+"db:migrate:reset" = "sh -c 'rm -rf migrations/db.sqlite && alembic upgrade head'"
+
+[packages]
+sqlalchemy = "1.4.27"
+sqlalchemy_seed = "0.3.0"
+alembic = "1.7.5"
+[dev-packages]
+flake8 = "4.0.1"
+autopep8 = "1.6.0"
+pytest = "6.2.5"
+
+[requires]
+python_version = "3.9"
