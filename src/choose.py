@@ -4,7 +4,9 @@ import random
 
 from migrations.models.buyer import Buyers
 from migrations.models.product import Products
+from migrations.models.reserved_product import ReservedProducts
 from migrations.models.wishlist import Wishlists  # noqa E401
+from migrations.setting import Session
 
 log = logging.getLogger()
 
@@ -64,7 +66,7 @@ def main():
 
         # 1人のみに絞れた場合は終了する
         if len(buyers_of_product) == 1:
-            drawing_result[key] = buyers_of_product
+            drawing_result[key] = buyers_of_product[0]
             continue
 
         # 対象者が複数人いる場合は、ランダム選出
@@ -74,7 +76,8 @@ def main():
         drawing_result[key] = random_buyers[random.randrange(
             len(random_buyers))]
 
-    # TODO 確定枠を作成
+    # 確定枠を作成
+    save_reserved_products(drawing_result)
     # ダンプ
     import json
     print(json.dumps(drawing_result, ensure_ascii=False, indent=2))
@@ -98,3 +101,16 @@ def convert_number_of_buy(number_of_buy: str):
         return [int(number_of_buy)]
 
     return [int(num) for num in number_of_buy.split(';')]
+
+
+def save_reserved_products(drawing_result: dict) -> None:
+    reserved_products = []
+    for product_name in drawing_result.keys():
+        buyer_name = drawing_result[product_name]['buyer']
+        reserved_product = ReservedProducts()
+        reserved_product.product_name = product_name
+        reserved_product.buyer_name = buyer_name
+        reserved_products.append(reserved_product)
+
+    Session.add_all(reserved_products)
+    Session.commit()

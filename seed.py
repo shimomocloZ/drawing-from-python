@@ -10,7 +10,7 @@ from migrations.setting import Session
 def main():
     path = os.path.join('migrations', 'seeds', 'fixtures')
     fixtures = load_fixture_files(
-        path, ['products.yaml', 'wishlists.yaml', 'buyers.yaml', 'reserved_products.yaml'])
+        path, ['products.yaml', 'wishlists.yaml', 'buyers.yaml'])
     load_fixtures(Session, fixtures)
 
 
