@@ -10,7 +10,6 @@ from migrations.models.product import Products
 from migrations.models.reserved_product import ReservedProducts
 from migrations.models.wishlist import Wishlists  # noqa E401
 from migrations.setting import Session
-from sqlalchemy.orm import Query
 
 log = logging.getLogger()
 
@@ -18,55 +17,14 @@ log = logging.getLogger()
 def main():
     # 購入者を取得
     buyers: list[Buyers] = Buyers.query.all()
-    # 商品
+    # 商品を取得
     products: list[Products] = Products.query.all()
 
     # 抽選処理
     # 商品ごとに購入優先度を設定する
     current_drawings: dict = create_current_drawings(buyers, products)
-
-    drawing_result: dict = create_drawings_dict(products)
-    # 購入優先度順にソート
-    for product_name in current_drawings.keys():
-        # 商品の購入者がいない場合はスキップ
-        if len(current_drawings[product_name]) == 0:
-            # 結果からも消す
-            del drawing_result[product_name]
-            continue
-        # 商品がすでに購入者が確定している場合、新規購入者を受け付けない
-        reserved: Query = ReservedProducts.query.filter(
-            ReservedProducts.product_name == product_name)
-        rows: list[ReservedProducts] = [row for row in reserved]
-        if len(rows) == 1:
-            reserved_dict = {
-                'buyer': rows[0].buyer_name,
-                'number_of_buy': rows[0].number_of_buy
-            }
-            drawing_result[product_name] = reserved_dict
-            continue
-
-        max_number = max(current_drawings[product_name], key=lambda x: x['number_of_buy'])[
-            'number_of_buy']
-        min_number = min(current_drawings[product_name], key=lambda x: x['number_of_buy'])[
-            'number_of_buy']
-        buyers_of_product = current_drawings[product_name]
-        # 最大値と最小値が混在している場合は最大値をリストから除去する
-        if max_number != min_number:
-            buyers_of_product = [buyer for buyer in current_drawings[product_name]
-                                 if buyer['number_of_buy'] == min_number]
-
-        # 1人のみに絞れた場合は終了する
-        if len(buyers_of_product) == 1:
-            drawing_result[product_name] = buyers_of_product[0]
-            continue
-
-        # 対象者が複数人いる場合は、ランダム選出
-        random_buyers = random.sample(
-            buyers_of_product, len(buyers_of_product))
-        # 2回抽選
-        drawing_result[product_name] = random_buyers[random.randrange(
-            len(random_buyers))]
-
+    # 商品購入者を決定する
+    drawing_result: dict = create_drawing_result(current_drawings, products)
     # 確定枠を作成
     save_reserved_products(drawing_result)
     # 結果をファイルに出力する
@@ -106,6 +64,36 @@ def create_current_drawings(buyers: list[Buyers], products: list[Products]) -> d
     return current_drawings
 
 
+def create_drawing_result(current_drawings: dict, products: list[Products]):
+    drawing_result: dict = create_drawings_dict(products)
+    # 購入優先度順にソート
+    for product_name in current_drawings.keys():
+        # 商品の購入者がいない場合はスキップ
+        if len(current_drawings[product_name]) == 0:
+            # 結果からも消す
+            del drawing_result[product_name]
+            continue
+        # 商品がすでに購入者が確定している場合、新規購入者を受け付けない
+        reserved = fetch_reserved_product_by_product_name(product_name)
+        if len(reserved) == 1:
+            reserved_dict = {
+                'buyer': reserved[0].buyer_name,
+                'number_of_buy': reserved[0].number_of_buy
+            }
+            drawing_result[product_name] = reserved_dict
+            continue
+
+        confirm_buyer, only = choose_buyer(current_drawings, product_name)
+        if only:
+            drawing_result[product_name] = confirm_buyer[0]
+            continue
+
+        # 対象者が複数人いる場合は、ランダム選出
+        drawing_result[product_name] = choose_random_buyer(confirm_buyer)
+
+    return drawing_result
+
+
 def create_drawings_dict(products: list[Products]) -> dict:
     return {product.name: [] for product in products}
 
@@ -128,6 +116,35 @@ def convert_number_of_buy(number_of_buy: str):
         return [int(number_of_buy)]
 
     return [int(num) for num in number_of_buy.split(';')]
+
+
+def choose_buyer(current_drawings: dict, product_name: str):
+    max_number = max(current_drawings[product_name], key=lambda x: x['number_of_buy'])[
+        'number_of_buy']
+    min_number = min(current_drawings[product_name], key=lambda x: x['number_of_buy'])[
+        'number_of_buy']
+    buyers_of_product = current_drawings[product_name]
+    # 最大値と最小値が混在している場合は最大値をリストから除去する
+    if max_number != min_number:
+        buyers_of_product = [buyer for buyer in current_drawings[product_name]
+                             if buyer['number_of_buy'] == min_number]
+
+    # 一人に絞れたらTrue, 複数人の場合はFalse
+    return buyers_of_product, len(buyers_of_product) == 1
+
+
+def choose_random_buyer(confirm_buyer: list[dict]):
+    # シャッフル
+    random_buyers = random.sample(confirm_buyer, len(confirm_buyer))
+    # 取得するインデックスもランダム
+    return random_buyers[random.randrange(len(random_buyers))]
+
+
+def fetch_reserved_product_by_product_name(product_name: str) -> list[ReservedProducts]:
+    reserved = ReservedProducts.query.filter(
+        ReservedProducts.product_name == product_name)
+    rows: list[ReservedProducts] = [row for row in reserved]
+    return rows
 
 
 def save_reserved_products(drawing_result: dict) -> None:
