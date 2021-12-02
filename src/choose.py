@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
+import datetime
+import json
 import logging
+import os
 import random
 
 from migrations.models.buyer import Buyers
@@ -90,9 +93,10 @@ def main():
 
     # 確定枠を作成
     save_reserved_products(drawing_result)
-    # ダンプ
-    import json
-    print(json.dumps(drawing_result, ensure_ascii=False, indent=2))
+    # 結果をファイルに出力する
+    now = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+    with open(os.path.join('data', f'drawing_result_{now}.json'), 'w', encoding='utf8') as f:
+        json.dump(drawing_result, f, ensure_ascii=False, indent=2)
 
 
 def validate_product(product_name, product_models: list[Products]):
