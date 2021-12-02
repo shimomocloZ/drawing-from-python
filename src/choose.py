@@ -7,6 +7,7 @@ from migrations.models.product import Products
 from migrations.models.reserved_product import ReservedProducts
 from migrations.models.wishlist import Wishlists  # noqa E401
 from migrations.setting import Session
+from sqlalchemy.orm import Query
 
 log = logging.getLogger()
 
@@ -47,32 +48,44 @@ def main():
 
     drawing_result: dict = {product.name: [] for product in products}
     # 購入優先度順にソート
-    for key in drawings:
+    for product_name in drawings.keys():
         # 商品の購入者がいない場合はスキップ
-        if len(drawings[key]) == 0:
+        if len(drawings[product_name]) == 0:
             # 結果からも消す
-            del drawing_result[key]
+            del drawing_result[product_name]
             continue
-        max_number = max(drawings[key], key=lambda x: x['number_of_buy'])[
+        # 商品がすでに購入者が確定している場合、新規購入者を受け付けない
+        reserved: Query = ReservedProducts.query.filter(
+            ReservedProducts.product_name == product_name)
+        rows: list[ReservedProducts] = [row for row in reserved]
+        if len(rows) == 1:
+            reserved_dict = {
+                'buyer': rows[0].buyer_name,
+                'number_of_buy': rows[0].number_of_buy
+            }
+            drawing_result[product_name] = reserved_dict
+            continue
+
+        max_number = max(drawings[product_name], key=lambda x: x['number_of_buy'])[
             'number_of_buy']
-        min_number = min(drawings[key], key=lambda x: x['number_of_buy'])[
+        min_number = min(drawings[product_name], key=lambda x: x['number_of_buy'])[
             'number_of_buy']
-        buyers_of_product = drawings[key]
+        buyers_of_product = drawings[product_name]
         # 最大値と最小値が混在している場合は最大値をリストから除去する
         if max_number != min_number:
-            buyers_of_product = [buyer for buyer in drawings[key]
+            buyers_of_product = [buyer for buyer in drawings[product_name]
                                  if buyer['number_of_buy'] == min_number]
 
         # 1人のみに絞れた場合は終了する
         if len(buyers_of_product) == 1:
-            drawing_result[key] = buyers_of_product[0]
+            drawing_result[product_name] = buyers_of_product[0]
             continue
 
         # 対象者が複数人いる場合は、ランダム選出
         random_buyers = random.sample(
             buyers_of_product, len(buyers_of_product))
         # 2回抽選
-        drawing_result[key] = random_buyers[random.randrange(
+        drawing_result[product_name] = random_buyers[random.randrange(
             len(random_buyers))]
 
     # 確定枠を作成
