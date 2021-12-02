@@ -27,7 +27,6 @@ def main():
         priorities = convert_priority(wishlist.priority)
         numbers_of_buy = convert_number_of_buy(wishlist.number_of_buy)
         for product_name, num_of_buy in zip(priorities, numbers_of_buy):
-            print(product_name, num_of_buy)
             # バリデーション
             # 商品に存在しないものは弾く
             if not validate_product(product_name, products):
@@ -104,12 +103,16 @@ def convert_number_of_buy(number_of_buy: str):
 
 
 def save_reserved_products(drawing_result: dict) -> None:
+    # 一回全部消す
+    ReservedProducts.query.delete()
     reserved_products = []
     for product_name in drawing_result.keys():
         buyer_name = drawing_result[product_name]['buyer']
+        number_of_buy = drawing_result[product_name]['number_of_buy']
         reserved_product = ReservedProducts()
         reserved_product.product_name = product_name
         reserved_product.buyer_name = buyer_name
+        reserved_product.number_of_buy = number_of_buy
         reserved_products.append(reserved_product)
 
     Session.add_all(reserved_products)
