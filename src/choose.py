@@ -1,49 +1,34 @@
 # -*- coding: utf-8 -*-
 import logging
-import os.path as path
 import random
 
-from src.models.buyer import Buyer
-from src.models.product import Product
-from src.utils import file_util, get_wishlist
+from migrations.models.buyer import Buyers
+from migrations.models.product import Products
+from migrations.models.wishlist import Wishlists  # noqa E401
 
 log = logging.getLogger()
-
-DATA_PATH = path.join('data')
 
 
 def main():
     # 購入者を取得
-    buyers = file_util.read_csv(path.join(DATA_PATH, 'buyer.csv'))
-    # 商品を取得
-    products = file_util.read_csv(path.join(DATA_PATH, 'product.csv'))
-    # 購入優先度リストを取得
-    wishlists = file_util.read_csv(path.join(DATA_PATH, 'wishlist.csv'))
-
-    # モデル生成
-    # 購入者と購入優先度の紐付け
-    buyer_models: list[Buyer] = []
-    for buyer in buyers:
-        wishlist = get_wishlist.get_wishlist(buyer['wishlist'], wishlists)
-        buyer_model = Buyer(
-            id=buyer['id'], name=buyer['name'], wishlist=wishlist)
-        buyer_models.append(buyer_model)
-
+    buyers: list[Buyers] = Buyers.query.all()
     # 商品
-    product_models: list[Product] = [
-        Product(**product) for product in products]
+    products: list[Products] = Products.query.all()
 
     # 抽選処理
     # 商品ごとに購入優先度を設定する
-    drawings: dict = {product.name: [] for product in product_models}
+    drawings: dict = {product.name: [] for product in products}
 
-    # 購入者でループ
-    for buyer in buyer_models:
-        wishlist = buyer.wishlist
-        for product_name, num_of_buy in zip(wishlist.priority, wishlist.number_of_buy):
+    for buyer in buyers:
+        # 購入優先度を取得
+        wishlist: Wishlists = buyer.wishlist
+        priorities = convert_priority(wishlist.priority)
+        numbers_of_buy = convert_number_of_buy(wishlist.number_of_buy)
+        for product_name, num_of_buy in zip(priorities, numbers_of_buy):
+            print(product_name, num_of_buy)
             # バリデーション
             # 商品に存在しないものは弾く
-            if not validate_product(product_name, product_models):
+            if not validate_product(product_name, products):
                 log.warning(
                     f'選択した商品は存在しません。 購入者={buyer.name}, 商品名={product_name}')
                 continue
@@ -59,7 +44,7 @@ def main():
                 'number_of_buy': num_of_buy
             })
 
-    drawing_result: dict = {product.name: [] for product in product_models}
+    drawing_result: dict = {product.name: [] for product in products}
     # 購入優先度順にソート
     for key in drawings:
         # 商品の購入者がいない場合はスキップ
@@ -95,10 +80,21 @@ def main():
     print(json.dumps(drawing_result, ensure_ascii=False, indent=2))
 
 
-def validate_product(product_name, product_models: list[Product]):
+def validate_product(product_name, product_models: list[Products]):
     result = [p.name for p in product_models if p.name == product_name]
     return len(result) != 0
 
 
-def validate_buy_of_num(buy_of_num):
-    return buy_of_num <= 2
+def validate_buy_of_num(num_of_buy):
+    return num_of_buy <= 2
+
+
+def convert_priority(priority: str):
+    return priority.split(';')
+
+
+def convert_number_of_buy(number_of_buy: str):
+    if ';' not in number_of_buy:
+        return [int(number_of_buy)]
+
+    return [int(num) for num in number_of_buy.split(';')]
