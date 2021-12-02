@@ -23,37 +23,13 @@ def main():
 
     # 抽選処理
     # 商品ごとに購入優先度を設定する
-    drawings: dict = {product.name: [] for product in products}
+    current_drawings: dict = create_current_drawings(buyers, products)
 
-    for buyer in buyers:
-        # 購入優先度を取得
-        wishlist: Wishlists = buyer.wishlist
-        priorities = convert_priority(wishlist.priority)
-        numbers_of_buy = convert_number_of_buy(wishlist.number_of_buy)
-        for product_name, num_of_buy in zip(priorities, numbers_of_buy):
-            # バリデーション
-            # 商品に存在しないものは弾く
-            if not validate_product(product_name, products):
-                log.warning(
-                    f'選択した商品は存在しません。 購入者={buyer.name}, 商品名={product_name}')
-                continue
-
-            # 購入数が多いものは弾く
-            if not validate_buy_of_num(num_of_buy):
-                log.warning(
-                    f'商品2つまでしか購入できません。購入者={buyer.name}, 購入数={num_of_buy}')
-                continue
-
-            drawings[product_name].append({
-                'buyer': buyer.name,
-                'number_of_buy': num_of_buy
-            })
-
-    drawing_result: dict = {product.name: [] for product in products}
+    drawing_result: dict = create_drawings_dict(products)
     # 購入優先度順にソート
-    for product_name in drawings.keys():
+    for product_name in current_drawings.keys():
         # 商品の購入者がいない場合はスキップ
-        if len(drawings[product_name]) == 0:
+        if len(current_drawings[product_name]) == 0:
             # 結果からも消す
             del drawing_result[product_name]
             continue
@@ -69,14 +45,14 @@ def main():
             drawing_result[product_name] = reserved_dict
             continue
 
-        max_number = max(drawings[product_name], key=lambda x: x['number_of_buy'])[
+        max_number = max(current_drawings[product_name], key=lambda x: x['number_of_buy'])[
             'number_of_buy']
-        min_number = min(drawings[product_name], key=lambda x: x['number_of_buy'])[
+        min_number = min(current_drawings[product_name], key=lambda x: x['number_of_buy'])[
             'number_of_buy']
-        buyers_of_product = drawings[product_name]
+        buyers_of_product = current_drawings[product_name]
         # 最大値と最小値が混在している場合は最大値をリストから除去する
         if max_number != min_number:
-            buyers_of_product = [buyer for buyer in drawings[product_name]
+            buyers_of_product = [buyer for buyer in current_drawings[product_name]
                                  if buyer['number_of_buy'] == min_number]
 
         # 1人のみに絞れた場合は終了する
@@ -97,6 +73,41 @@ def main():
     now = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
     with open(os.path.join('data', f'drawing_result_{now}.json'), 'w', encoding='utf8') as f:
         json.dump(drawing_result, f, ensure_ascii=False, indent=2)
+
+    print('finish!')
+
+
+def create_current_drawings(buyers: list[Buyers], products: list[Products]) -> dict:
+    current_drawings = create_drawings_dict(products)
+    for buyer in buyers:
+        # 購入優先度を取得
+        wishlist: Wishlists = buyer.wishlist
+        priorities = convert_priority(wishlist.priority)
+        numbers_of_buy = convert_number_of_buy(wishlist.number_of_buy)
+        for product_name, num_of_buy in zip(priorities, numbers_of_buy):
+            # バリデーション
+            # 商品に存在しないものは弾く
+            if not validate_product(product_name, products):
+                log.warning(
+                    f'選択した商品は存在しません。 購入者={buyer.name}, 商品名={product_name}')
+                continue
+
+            # 購入数が多いものは弾く
+            if not validate_buy_of_num(num_of_buy):
+                log.warning(
+                    f'商品2つまでしか購入できません。購入者={buyer.name}, 購入数={num_of_buy}')
+                continue
+
+            current_drawings[product_name].append({
+                'buyer': buyer.name,
+                'number_of_buy': num_of_buy
+            })
+
+    return current_drawings
+
+
+def create_drawings_dict(products: list[Products]) -> dict:
+    return {product.name: [] for product in products}
 
 
 def validate_product(product_name, product_models: list[Products]):
